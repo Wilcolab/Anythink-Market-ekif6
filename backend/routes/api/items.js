@@ -40,6 +40,7 @@ router.get("/", auth.optional, function(req, res, next) {
   var query = {};
   var limit = 100;
   var offset = 0;
+  var title = "";
 
   if (typeof req.query.limit !== "undefined") {
     limit = req.query.limit;
@@ -49,13 +50,17 @@ router.get("/", auth.optional, function(req, res, next) {
     offset = req.query.offset;
   }
 
+  if (typeof req.query.title !== "undefined") {
+    title = req.query.title;
+  }
+
   if (typeof req.query.tag !== "undefined") {
     query.tagList = { $in: [req.query.tag] };
   }
 
   Promise.all([
     req.query.seller ? User.findOne({ username: req.query.seller }) : null,
-    req.query.favorited ? User.findOne({ username: req.query.favorited }) : null
+    req.query.favorited ? User.findOne({ username: req.query.favorited }) : null,
   ])
     .then(function(results) {
       var seller = results[0];
@@ -69,6 +74,10 @@ router.get("/", auth.optional, function(req, res, next) {
         query._id = { $in: favoriter.favorites };
       } else if (req.query.favorited) {
         query._id = { $in: [] };
+      }
+
+      if (title) {
+        query.title = { $regex:title }
       }
 
       return Promise.all([
