@@ -40,7 +40,6 @@ router.get("/", auth.optional, function(req, res, next) {
   var query = {};
   var limit = 100;
   var offset = 0;
-  var title = "";
 
   if (typeof req.query.limit !== "undefined") {
     limit = req.query.limit;
@@ -48,10 +47,6 @@ router.get("/", auth.optional, function(req, res, next) {
 
   if (typeof req.query.offset !== "undefined") {
     offset = req.query.offset;
-  }
-
-  if (typeof req.query.title !== "undefined") {
-    title = req.query.title;
   }
 
   if (typeof req.query.tag !== "undefined") {
@@ -74,10 +69,6 @@ router.get("/", auth.optional, function(req, res, next) {
         query._id = { $in: favoriter.favorites };
       } else if (req.query.favorited) {
         query._id = { $in: [] };
-      }
-
-      if (title) {
-        query.title = { $regex:title }
       }
 
       return Promise.all([
@@ -324,21 +315,17 @@ router.delete("/:item/comments/:comment", auth.required, function(
   res,
   next
 ) {
-  if (req.comment.seller.toString() === req.payload.id.toString()) {
-    req.item.comments.remove(req.comment._id);
-    req.item
-      .save()
-      .then(
-        Comment.find({ _id: req.comment._id })
-          .remove()
-          .exec()
-      )
-      .then(function() {
-        res.sendStatus(204);
-      });
-  } else {
-    res.sendStatus(403);
-  }
+  req.item.comments.remove(req.comment._id);
+  req.item
+    .save()
+    .then(
+      Comment.find({ _id: req.comment._id })
+        .remove()
+        .exec()
+    )
+    .then(function() {
+      res.sendStatus(204);
+    });
 });
 
 module.exports = router;
